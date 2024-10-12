@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { fetchEmails } from "../services/emailService";
+import { fetchEmailBody, fetchEmails } from "../services/emailService";
 import { Email } from "../types/EmailType";
 
 interface EmailContextType {
@@ -62,9 +62,10 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
-  const selectEmail = (email: Email) => {
+  const selectEmail = async (email: Email) => {
     markAsRead(email.id);
-    setSelectedEmail(email);
+    const emailBody = await fetchEmailBody(email.id);
+    setSelectedEmail({ ...email, body: emailBody });
   };
 
   const getUnreadEmails = () => emails.filter((email) => !email.isRead);

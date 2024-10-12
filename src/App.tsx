@@ -1,14 +1,14 @@
 import React from "react";
-import "./App.css";
-import { useEmailContext } from "./contexts/EmailContext";
+import EmailList from "./components/EmailList/EmailList";
+import EmailBody from "./components/EmailBody/EmailBody";
+import styles from "./app.module.css";
 
 const App: React.FC = () => {
-  const { emails } = useEmailContext();
-
   return (
-    <div className="app">
-      <p>{JSON.stringify(emails)}</p>
-    </div>
+    <main className={styles.container}>
+      <EmailList />
+      <EmailBody />
+    </main>
   );
 };
 

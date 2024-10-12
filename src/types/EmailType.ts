@@ -6,6 +6,7 @@ export interface Email {
   date: string;
   isRead: boolean;
   isFavorite: boolean;
+  body?: EmailBody;
 }
 
 export interface EmailBody {
