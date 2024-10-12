@@ -1,20 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import "./App.css";
-import { fetchEmails } from "./services/emailService";
-import { Email } from "./types/EmailType";
+import { useEmailContext } from "./contexts/EmailContext";
 
 const App: React.FC = () => {
-  const [emails, setEmails] = useState<Email[]>([]);
+  const { emails } = useEmailContext();
 
-  useEffect(() => {
-    const getEmails = async () => {
-      const emailData = await fetchEmails();
-      setEmails(emailData.list);
-    };
-    getEmails();
-  }, []);
-
-  return <div className="app">{JSON.stringify(emails)}</div>;
+  return (
+    <div className="app">
+      <p>{JSON.stringify(emails)}</p>
+    </div>
+  );
 };
 
 export default App;
