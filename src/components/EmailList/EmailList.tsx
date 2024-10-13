@@ -1,26 +1,19 @@
 import React from "react";
 import { useEmailContext } from "../../contexts/EmailContext";
+import EmailListItem from "../EmailListItem/EmailListItem";
+import styles from "./styles.module.css";
 
 const EmailList: React.FC = () => {
-  const { emails, selectEmail } = useEmailContext();
+  const { emails, selectEmail, selectedEmail } = useEmailContext();
 
   return (
-    <ul>
+    <ul className={styles.emailList}>
       {emails.map((email) => (
-        <li
-          key={email.id}
-          aria-label={`Email from ${email.from.name}`}
-          onClick={() => selectEmail(email)}
-        >
-          <div>
-            <h2>{email.from.name.charAt(0)}</h2>
-          </div>
-          <div>
-            <h3>{email.subject}</h3>
-            <p>{email.short_description}</p>
-            <p>{new Date(email.date).toLocaleString()}</p>
-          </div>
-        </li>
+        <EmailListItem
+          email={email}
+          selectEmail={selectEmail}
+          selected={selectedEmail?.id === email.id}
+        />
       ))}
     </ul>
   );
