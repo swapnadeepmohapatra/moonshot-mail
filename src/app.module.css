@@ -1,6 +1,9 @@
 .container {
+  background-color: var(--color-background);
+}
+
+.mailsContainer {
   display: flex;
   justify-content: center;
-  background-color: var(--color-background);
   height: 100vh;
 }

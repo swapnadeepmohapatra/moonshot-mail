@@ -1,0 +1,24 @@
+.filterBar {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  align-items: center;
+}
+
+.selectedFilter {
+  background: var(--color-filter-button);
+}
+
+.unselectedFilter {
+  background: var(--color-background);
+}
+
+.filter {
+  padding: 5px 10px;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  font-size: 1rem;
+  border-radius: 1rem;
+  padding: 0.3rem 1rem;
+}

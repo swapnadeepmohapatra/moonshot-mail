@@ -11,6 +11,8 @@ interface EmailContextType {
   getUnreadEmails: () => Email[];
   getFavoriteEmails: () => Email[];
   getReadEmails: () => Email[];
+  filter: string;
+  changeFilter: (newFilter: FilterType) => void;
 }
 
 const EmailContext = createContext<EmailContextType>({
@@ -22,7 +24,16 @@ const EmailContext = createContext<EmailContextType>({
   getUnreadEmails: () => [],
   getFavoriteEmails: () => [],
   getReadEmails: () => [],
+  filter: "",
+  changeFilter: () => {},
 });
+
+export enum FilterType {
+  Unread = "Unread",
+  Read = "Read",
+  Favorites = "Favorites",
+  None = "",
+}
 
 export const useEmailContext = () => {
   const context = useContext(EmailContext);
@@ -37,6 +48,7 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [emails, setEmails] = useState<Email[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [filter, setFilter] = useState<FilterType>(FilterType.None);
 
   useEffect(() => {
     const loadEmails = async () => {
@@ -85,10 +97,26 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const getReadEmails = () => emails.filter((email) => email.isRead);
 
+  const changeFilter = (newFilter: FilterType) => {
+    if (filter === newFilter) {
+      setFilter(FilterType.None);
+      return;
+    }
+
+    setFilter(newFilter);
+  };
+
   return (
     <EmailContext.Provider
       value={{
-        emails,
+        emails:
+          filter === FilterType.Unread
+            ? getUnreadEmails()
+            : filter === FilterType.Read
+            ? getReadEmails()
+            : filter === FilterType.Favorites
+            ? getFavoriteEmails()
+            : emails,
         selectedEmail,
         toggleFavorite,
         markAsRead,
@@ -96,6 +124,8 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
         getUnreadEmails,
         getFavoriteEmails,
         getReadEmails,
+        filter,
+        changeFilter,
       }}
     >
       {children}
