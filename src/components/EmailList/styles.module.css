@@ -1,6 +1,6 @@
 .emailList {
-  overflow: scroll;
+  flex: 1;
   margin: 0;
   padding: 0;
-  background-color: var(--color-background);
+  overflow-y: scroll;
 }

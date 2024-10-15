@@ -1,4 +1,6 @@
 * {
+  box-sizing: border-box;
+
   --color-accent: #e54065;
   --color-background: #f4f5f9;
   --color-border: #cfd2dc;
