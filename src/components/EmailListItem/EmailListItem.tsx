@@ -39,7 +39,7 @@ function EmailListItem({ email, selectEmail, selected }: EmailListItemProps) {
         <p>
           {formatDate(email.date)}
           <span className={styles.emailFavorite}>
-            {!email.isFavorite ? "Favorite" : ""}
+            {email.isFavorite ? "Favorite" : ""}
           </span>
         </p>
       </div>

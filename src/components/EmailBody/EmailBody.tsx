@@ -4,7 +4,7 @@ import styles from "./styles.module.css";
 import { formatDate } from "../../utils/formatDate";
 
 const EmailBody: React.FC = () => {
-  const { selectedEmail } = useEmailContext();
+  const { selectedEmail, toggleFavorite } = useEmailContext();
 
   if (!selectedEmail) {
     return <></>;
@@ -20,7 +20,10 @@ const EmailBody: React.FC = () => {
           <h2>{selectedEmail?.subject}</h2>
           <p>{formatDate(selectedEmail?.date)}</p>
         </div>
-        <button className={styles.favoriteButton}>
+        <button
+          className={styles.favoriteButton}
+          onClick={() => toggleFavorite(selectedEmail?.id)}
+        >
           {selectedEmail?.isFavorite
             ? "Remove from favorites"
             : "Mark as favorite"}

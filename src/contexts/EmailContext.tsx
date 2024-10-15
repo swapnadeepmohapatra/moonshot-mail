@@ -52,6 +52,12 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
         email.id === id ? { ...email, isFavorite: !email.isFavorite } : email
       )
     );
+
+    if (selectedEmail?.id === id) {
+      setSelectedEmail((prevEmail) =>
+        prevEmail ? { ...prevEmail, isFavorite: !prevEmail.isFavorite } : null
+      );
+    }
   };
 
   const markAsRead = (id: string) => {
@@ -63,9 +69,9 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const selectEmail = async (email: Email) => {
-    markAsRead(email.id);
     const emailBody = await fetchEmailBody(email.id);
     setSelectedEmail({ ...email, body: emailBody });
+    markAsRead(email.id);
   };
 
   const getUnreadEmails = () => emails.filter((email) => !email.isRead);
