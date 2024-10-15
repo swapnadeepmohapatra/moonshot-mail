@@ -52,15 +52,36 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const loadEmails = async () => {
+      const storedEmails = JSON.parse(
+        localStorage.getItem("persistedEmails") || "[]"
+      );
       const emailData = await fetchEmails();
-      setEmails(emailData.list);
+
+      const mergedEmails = emailData.list.map((email: Email) => {
+        const storedEmail = storedEmails.find((e: Email) => e.id === email.id);
+        return storedEmail ? { ...email, ...storedEmail } : email;
+      });
+
+      setEmails(mergedEmails);
     };
     loadEmails();
   }, []);
 
+  const persistEmails = (updatedEmails: Email[]) => {
+    const persistedEmails = updatedEmails.filter(
+      (email) => email.isFavorite || email.isRead
+    );
+    localStorage.setItem("persistedEmails", JSON.stringify(persistedEmails));
+  };
+
   const toggleFavorite = (id: string) => {
     setEmails((prevEmails) =>
       prevEmails.map((email) =>
+        email.id === id ? { ...email, isFavorite: !email.isFavorite } : email
+      )
+    );
+    persistEmails(
+      emails.map((email) =>
         email.id === id ? { ...email, isFavorite: !email.isFavorite } : email
       )
     );
@@ -75,6 +96,11 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
   const markAsRead = (id: string) => {
     setEmails((prevEmails) =>
       prevEmails.map((email) =>
+        email.id === id ? { ...email, isRead: true } : email
+      )
+    );
+    persistEmails(
+      emails.map((email) =>
         email.id === id ? { ...email, isRead: true } : email
       )
     );
@@ -102,7 +128,6 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
       setFilter(FilterType.None);
       return;
     }
-
     setFilter(newFilter);
   };
 
