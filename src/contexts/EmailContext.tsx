@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+} from "react";
 import { fetchEmailBody, fetchEmails } from "../services/emailService";
 import { Email } from "../types/EmailType";
 
@@ -13,20 +19,17 @@ interface EmailContextType {
   getReadEmails: () => Email[];
   filter: string;
   changeFilter: (newFilter: FilterType) => void;
+  currentPage: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  totalEmails: number;
+  goToNextPage: () => void;
+  goToPreviousPage: () => void;
+  firstEmailId: string;
+  lastEmailId: string;
 }
 
-const EmailContext = createContext<EmailContextType>({
-  emails: [],
-  selectedEmail: null,
-  toggleFavorite: () => {},
-  markAsRead: () => {},
-  selectEmail: () => {},
-  getUnreadEmails: () => [],
-  getFavoriteEmails: () => [],
-  getReadEmails: () => [],
-  filter: "",
-  changeFilter: () => {},
-});
+const EmailContext = createContext<EmailContextType | undefined>(undefined);
 
 export enum FilterType {
   Unread = "Unread",
@@ -49,13 +52,17 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
   const [emails, setEmails] = useState<Email[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [filter, setFilter] = useState<FilterType>(FilterType.None);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalEmails, setTotalEmails] = useState<number>(0);
 
   useEffect(() => {
     const loadEmails = async () => {
       const storedEmails = JSON.parse(
         localStorage.getItem("persistedEmails") || "[]"
       );
-      const emailData = await fetchEmails();
+      const emailData = await fetchEmails(currentPage);
+
+      setTotalEmails(emailData.total);
 
       const mergedEmails = emailData.list.map((email: Email) => {
         const storedEmail = storedEmails.find((e: Email) => e.id === email.id);
@@ -65,7 +72,10 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
       setEmails(mergedEmails);
     };
     loadEmails();
-  }, []);
+  }, [currentPage]);
+
+  const goToNextPage = () => setCurrentPage((prevPage) => prevPage + 1);
+  const goToPreviousPage = () => setCurrentPage((prevPage) => prevPage - 1);
 
   const persistEmails = (updatedEmails: Email[]) => {
     const persistedEmails = updatedEmails.filter(
@@ -74,36 +84,21 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("persistedEmails", JSON.stringify(persistedEmails));
   };
 
-  const toggleFavorite = (id: string) => {
-    setEmails((prevEmails) =>
-      prevEmails.map((email) =>
-        email.id === id ? { ...email, isFavorite: !email.isFavorite } : email
-      )
+  const updateEmail = (id: string, changes: Partial<Email>) => {
+    const updatedEmails = emails.map((email) =>
+      email.id === id ? { ...email, ...changes } : email
     );
-    persistEmails(
-      emails.map((email) =>
-        email.id === id ? { ...email, isFavorite: !email.isFavorite } : email
-      )
-    );
+    setEmails(updatedEmails);
+    persistEmails(updatedEmails);
+  };
 
-    if (selectedEmail?.id === id) {
-      setSelectedEmail((prevEmail) =>
-        prevEmail ? { ...prevEmail, isFavorite: !prevEmail.isFavorite } : null
-      );
-    }
+  const toggleFavorite = (id: string) => {
+    const email = emails.find((e) => e.id === id);
+    if (email) updateEmail(id, { isFavorite: !email.isFavorite });
   };
 
   const markAsRead = (id: string) => {
-    setEmails((prevEmails) =>
-      prevEmails.map((email) =>
-        email.id === id ? { ...email, isRead: true } : email
-      )
-    );
-    persistEmails(
-      emails.map((email) =>
-        email.id === id ? { ...email, isRead: true } : email
-      )
-    );
+    updateEmail(id, { isRead: true });
   };
 
   const selectEmail = async (email: Email) => {
@@ -117,40 +112,46 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
     markAsRead(email.id);
   };
 
-  const getUnreadEmails = () => emails.filter((email) => !email.isRead);
-
-  const getFavoriteEmails = () => emails.filter((email) => email.isFavorite);
-
-  const getReadEmails = () => emails.filter((email) => email.isRead);
+  const filteredEmails = useMemo(() => {
+    switch (filter) {
+      case FilterType.Unread:
+        return emails.filter((email) => !email.isRead);
+      case FilterType.Read:
+        return emails.filter((email) => email.isRead);
+      case FilterType.Favorites:
+        return emails.filter((email) => email.isFavorite);
+      default:
+        return emails;
+    }
+  }, [emails, filter]);
 
   const changeFilter = (newFilter: FilterType) => {
-    if (filter === newFilter) {
-      setFilter(FilterType.None);
-      return;
-    }
-    setFilter(newFilter);
+    setFilter((prevFilter) =>
+      prevFilter === newFilter ? FilterType.None : newFilter
+    );
   };
 
   return (
     <EmailContext.Provider
       value={{
-        emails:
-          filter === FilterType.Unread
-            ? getUnreadEmails()
-            : filter === FilterType.Read
-            ? getReadEmails()
-            : filter === FilterType.Favorites
-            ? getFavoriteEmails()
-            : emails,
+        emails: filteredEmails,
         selectedEmail,
         toggleFavorite,
         markAsRead,
         selectEmail,
-        getUnreadEmails,
-        getFavoriteEmails,
-        getReadEmails,
+        getUnreadEmails: () => emails.filter((email) => !email.isRead),
+        getFavoriteEmails: () => emails.filter((email) => email.isFavorite),
+        getReadEmails: () => emails.filter((email) => email.isRead),
         filter,
         changeFilter,
+        currentPage,
+        goToNextPage,
+        goToPreviousPage,
+        hasNextPage: totalEmails > parseInt(emails[emails.length - 1]?.id),
+        hasPreviousPage: currentPage > 1,
+        totalEmails,
+        firstEmailId: emails[0]?.id,
+        lastEmailId: emails[emails.length - 1]?.id,
       }}
     >
       {children}
