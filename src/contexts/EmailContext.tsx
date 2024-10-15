@@ -69,6 +69,11 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const selectEmail = async (email: Email) => {
+    if (selectedEmail?.id === email.id) {
+      setSelectedEmail(null);
+      return;
+    }
+
     const emailBody = await fetchEmailBody(email.id);
     setSelectedEmail({ ...email, body: emailBody });
     markAsRead(email.id);
