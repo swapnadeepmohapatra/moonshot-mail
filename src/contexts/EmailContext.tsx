@@ -27,6 +27,7 @@ interface EmailContextType {
   goToPreviousPage: () => void;
   firstEmailId: string;
   lastEmailId: string;
+  loading: boolean;
 }
 
 const EmailContext = createContext<EmailContextType | undefined>(undefined);
@@ -54,9 +55,11 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
   const [filter, setFilter] = useState<FilterType>(FilterType.None);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalEmails, setTotalEmails] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const loadEmails = async () => {
+      setLoading(true);
       const storedEmails = JSON.parse(
         localStorage.getItem("persistedEmails") || "[]"
       );
@@ -70,6 +73,7 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       setEmails(mergedEmails);
+      setLoading(false);
     };
     loadEmails();
   }, [currentPage]);
@@ -107,9 +111,13 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
+    setLoading(true);
+
     const emailBody = await fetchEmailBody(email.id);
     setSelectedEmail({ ...email, body: emailBody });
     markAsRead(email.id);
+
+    setLoading(false);
   };
 
   const filteredEmails = useMemo(() => {
@@ -152,6 +160,7 @@ export const EmailProvider: React.FC<{ children: React.ReactNode }> = ({
         totalEmails,
         firstEmailId: emails[0]?.id,
         lastEmailId: emails[emails.length - 1]?.id,
+        loading,
       }}
     >
       {children}
